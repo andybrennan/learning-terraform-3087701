@@ -39,7 +39,8 @@ resource "aws_instance" "blog" {
 
   vpc_security_group_ids = [module.blog_sg.security_group_id]
 
-  #subnet_id = module.blog_vpc.public_subnets[0]
+  enable_nat_gateway = true
+  subnet_id = module.blog_vpc.public_subnets[0]
 
   tags = {
     Name = "HelloWorld"
