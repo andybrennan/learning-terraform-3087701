@@ -41,7 +41,7 @@ resource "aws_instance" "blog" {
 
   # Needed to set public IP 
   associate_public_ip_address = true
-  subnet_id = module.blog_sg.public_subnets[0]
+  subnet_id = module.blog_vpc.public_subnets[0]
 
   tags = {
     Name = "Learning Terraform"
@@ -56,7 +56,7 @@ module "alb" {
   subnets = module.blog_vpc.public_subnets[0]
 
   # Security Group
-  security_groups = [module.blog_vpc.security_group_id]
+  security_groups = [module.blog_sg.security_group_id]
 
   listeners = {
     ex-http-https-redirect = {
