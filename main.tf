@@ -53,40 +53,29 @@ module "alb" {
 
   name    = "blog-alb"
   vpc_id  = module.blog_vpc.vpc_id
-  subnets = module.blog_vpc.public_subnets[0]
+  subnets = module.blog_vpc.public_subnets
+
+  load_balancer_type = "application"
 
   # Security Group
   security_groups = [module.blog_sg.security_group_id]
 
-  listeners = {
-    ex-http-https-redirect = {
-      port     = 80
-      protocol = "HTTP"
-      redirect = {
-        port        = "443"
-        protocol    = "HTTPS"
-        status_code = "HTTP_301"
-      }
+  http_tcp_listeners = [
+    {
+      port               = 80
+      protocol           = "HTTP"
+      target_group_index = 0
     }
-    ex-https = {
-      port            = 443
-      protocol        = "HTTPS"
-      certificate_arn = "arn:aws:iam::123456789012:server-certificate/test_cert-123456789012"
+  ]
 
-      forward = {
-        target_group_key = "ex-instance"
-      }
-    }
-  }
-
-  target_groups = {
-    ex-instance = {
+  target_groups = [
+    {
       name_prefix      = "blog-"
-      protocol         = "HTTP"
-      port             = 80
+      backend_protocol = "HTTP"
+      backend_port     = 80
       target_type      = "instance"
     }
-  }
+  ]
 
   tags = {
     Environment = "dev"
@@ -97,7 +86,7 @@ module "alb" {
 module "blog_sg" {
   source  = "terraform-aws-modules/security-group/aws"
   version = "5.1.0"
-  name = "blog_new"
+  name = "blog"
 
   vpc_id = module.blog_vpc.vpc_id
   ingress_rules = ["http-80-tcp", "https-443-tcp"]
