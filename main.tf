@@ -21,6 +21,7 @@ data "aws_vpc" "default" {
 module "blog_vpc" {
   source = "terraform-aws-modules/vpc/aws"
 
+  # Note Lines 25-30 removed in c04_02
   name = "dev"
   cidr = "10.0.0.0/16"
 
@@ -44,6 +45,52 @@ resource "aws_instance" "blog" {
 
   tags = {
     Name = "Learning Terraform"
+  }
+}
+
+module "alb" {
+  source = "terraform-aws-modules/alb/aws"
+
+  name    = "blog-alb"
+  vpc_id  = module.blog_vpc.vpc_id
+  subnets = module.blog_vpc.public_subnets[0]
+
+  # Security Group
+  security_groups = module.blog_vpc.security_group_id
+
+  listeners = {
+    ex-http-https-redirect = {
+      port     = 80
+      protocol = "HTTP"
+      redirect = {
+        port        = "443"
+        protocol    = "HTTPS"
+        status_code = "HTTP_301"
+      }
+    }
+    ex-https = {
+      port            = 443
+      protocol        = "HTTPS"
+      certificate_arn = "arn:aws:iam::123456789012:server-certificate/test_cert-123456789012"
+
+      forward = {
+        target_group_key = "ex-instance"
+      }
+    }
+  }
+
+  target_groups = {
+    ex-instance = {
+      name_prefix      = "blog-"
+      protocol         = "HTTP"
+      port             = 80
+      target_type      = "instance"
+    }
+  }
+
+  tags = {
+    Environment = "dev"
+    Project     = "Example"
   }
 }
 
