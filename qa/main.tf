@@ -1,6 +1,7 @@
 module "qa" {
     source = "../modules/blog"
-
+    
+    # set some qa specific vars
     environment = {
         name = "qa"
         network_prefix = "10.1"
